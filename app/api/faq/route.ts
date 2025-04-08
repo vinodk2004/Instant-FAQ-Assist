@@ -12,35 +12,49 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = token.userId;
-    const { userInput } = await req.json();
+    const { message } = await req.json();
 
-    if (!userInput) {
+    if (!message) {
       return NextResponse.json({ error: 'Query is required' }, { status: 400 });
     }
 
     const { db } = await connectToDatabase();
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_FLASK_API_URL}/query`, {
+      const apiUrl = process.env.NEXT_PUBLIC_FLASK_API_URL || '';
+      if (!apiUrl) {
+        throw new Error('API URL is not configured');
+      }
+      
+      console.log('Making request to backend:', apiUrl);
+      console.log('Request body:', JSON.stringify({ message }));
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
-        body: JSON.stringify({ message: userInput }),
+        body: JSON.stringify({ message }),
       });
 
+      console.log('Backend response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to get response from FAQ model');
+        const errorText = await response.text();
+        console.error('Backend error response:', errorText);
+        throw new Error(`Failed to get response from FAQ model: ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('Backend response data:', data);
       
       // Check if the confidence score is below threshold
       if (data.confidence_score < 0.7) {
         // Forward to helpdesk
         const ticket = {
           userId: userId,
-          query: userInput,
+          query: message,
           status: 'pending',
           priority: 'medium',
           createdAt: new Date(),
@@ -56,17 +70,17 @@ export async function POST(req: NextRequest) {
       }
 
       return NextResponse.json(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error querying FAQ model:', error);
       return NextResponse.json(
-        { error: 'Failed to process your query' },
+        { error: 'Failed to process your query', details: error?.message || 'Unknown error' },
         { status: 500 }
       );
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in FAQ route:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error?.message || 'Unknown error' },
       { status: 500 }
     );
   }
