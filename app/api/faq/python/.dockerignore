@@ -1,0 +1,29 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+
+# Environments
+.env
+.venv
+venv/
+ENV/
+
+# Generated files
+faq_index.pkl
+
+# IDE specific files
+.idea/
+.vscode/
+
+# Git related
+.git/
+.gitignore
+.github/
+
+# Other
+*.md
+!README.md 
