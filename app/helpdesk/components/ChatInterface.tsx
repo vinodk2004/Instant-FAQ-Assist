@@ -11,6 +11,7 @@ export default function ChatInterface({ onSendMessage }: ChatInterfaceProps) {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [transcriptionError, setTranscriptionError] = useState<string | null>(null);
 
   // Initialize media recorder
   useEffect(() => {
@@ -36,6 +37,7 @@ export default function ChatInterface({ onSendMessage }: ChatInterfaceProps) {
       audioChunks.current = [];
       mediaRecorder.start();
       setIsRecording(true);
+      setTranscriptionError(null);
     }
   };
 
@@ -48,41 +50,36 @@ export default function ChatInterface({ onSendMessage }: ChatInterfaceProps) {
       // Create audio blob
       const audioBlob = new Blob(audioChunks.current, { type: 'audio/wav' });
       
+      // Create form data
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'recording.wav');
+
       try {
+        // Get the API URL from environment variables or use the default
+        const apiUrl = process.env.FLASK_API_URL?.split('/api/faq')[0] || 'http://localhost:5000';
+        
         // Send to Flask API for transcription
-        const transcription = await handleTranscribe(audioBlob);
+        const response = await fetch(`${apiUrl}/api/transcribe`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('Transcription failed');
+        }
+
+        const data = await response.json();
         
         // Update the input field with transcribed text
-        if (transcription) {
-          setUserInput(transcription);
+        if (data.text) {
+          setUserInput(data.text);
         }
       } catch (error) {
         console.error('Error transcribing audio:', error);
+        setTranscriptionError('Failed to transcribe audio. Please try again or type your message.');
       } finally {
         setIsTranscribing(false);
       }
-    }
-  };
-
-  const handleTranscribe = async (audioBlob: Blob) => {
-    try {
-      const formData = new FormData();
-      formData.append('audio', audioBlob, 'audio.wav');
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_FLASK_API_URL}/transcribe`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Transcription failed');
-      }
-
-      const data = await response.json();
-      return data.transcription;
-    } catch (error) {
-      console.error('Error transcribing audio:', error);
-      throw error;
     }
   };
 
@@ -90,6 +87,7 @@ export default function ChatInterface({ onSendMessage }: ChatInterfaceProps) {
     if (userInput.trim()) {
       onSendMessage(userInput);
       setUserInput('');
+      setTranscriptionError(null);
     }
   };
 
@@ -126,6 +124,10 @@ export default function ChatInterface({ onSendMessage }: ChatInterfaceProps) {
           Send
         </button>
       </div>
+      
+      {transcriptionError && (
+        <div className="transcription-error">{transcriptionError}</div>
+      )}
       
       <style jsx>{`
         .input-container {
@@ -173,6 +175,13 @@ export default function ChatInterface({ onSendMessage }: ChatInterfaceProps) {
         .send-button:disabled {
           background: #cccccc;
           cursor: not-allowed;
+        }
+        
+        .transcription-error {
+          color: #f44336;
+          margin-top: 8px;
+          font-size: 14px;
+          text-align: center;
         }
       `}</style>
     </div>

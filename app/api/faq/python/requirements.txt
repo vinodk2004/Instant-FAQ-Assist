@@ -1,0 +1,9 @@
+flask==2.3.3
+sentence-transformers==2.2.2
+faiss-cpu==1.7.3
+nltk==3.8.1
+scikit-learn==1.0.2
+numpy==1.24.3
+fuzzywuzzy==0.18.0
+python-Levenshtein==0.21.1
+gunicorn==20.1.0 

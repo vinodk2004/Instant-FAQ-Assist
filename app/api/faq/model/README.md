@@ -1,70 +1,68 @@
-# FAQ Model API
+# Instant FAQ Assistant Backend
 
-This is a Flask-based API that serves a custom FAQ model for answering user queries.
+This is the backend service for the Instant FAQ Assist project. It uses a Flask API with a Siamese neural network for FAQ matching and OpenAI's Whisper model for audio transcription.
 
-## Directory Structure
+## Local Development
 
-```
-model/
-├── app.py                 # Main Flask application
-├── faq_model_utils.py     # FAQ model utilities
-├── siamese_faq_model.pt   # Model weights
-├── vocab.pkl             # Vocabulary file
-├── faq_embeddings.npy    # Pre-computed embeddings
-├── faq_data.json         # FAQ data
-└── requirements.txt      # Python dependencies
-```
+1. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
 
-## Setup
+2. Install FFmpeg (required for Whisper audio processing):
+   - Windows: Download from [here](https://ffmpeg.org/download.html)
+   - Mac: `brew install ffmpeg`
+   - Linux: `sudo apt-get install ffmpeg`
 
-1. Create a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+3. Run the server:
+   ```
+   python app.py
+   ```
 
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+The server will run on http://localhost:5000 by default.
 
-3. Place the following files in the model directory:
-- `siamese_faq_model.pt`
-- `vocab.pkl`
-- `faq_embeddings.npy`
-- `faq_data.json`
+## API Endpoints
 
-## Running the API
+- `GET /`: Health check endpoint
+- `POST /api/faq`: FAQ query endpoint (expects JSON with a "message" field)
+- `POST /api/transcribe`: Audio transcription endpoint (expects form data with an "audio" file)
 
-1. Start the Flask server:
-```bash
-python app.py
-```
+## Deploying to Render
 
-The API will be available at `http://localhost:5000/api/faq`
+### Automatic Deployment with GitHub
 
-## API Endpoint
+1. Push your code to a GitHub repository
+2. Go to [Render Dashboard](https://dashboard.render.com)
+3. Create a new Web Service
+4. Connect your GitHub repository
+5. Select the directory with the Flask application (path: `app/api/faq/model`)
+6. Render will automatically use `render.yaml` for configuration
 
-### POST /api/faq
+### Manual Configuration on Render
 
-Request body:
-```json
-{
-    "message": "Your question here"
-}
-```
+If not using the YAML file, configure as follows:
 
-Response:
-```json
-{
-    "answer": "The answer to your question",
-    "confidence_score": 0.95
-}
-```
+- **Environment**: Python
+- **Build Command**: `chmod +x build.sh && ./build.sh`
+- **Start Command**: `gunicorn app:app --bind 0.0.0.0:$PORT`
+- **Python Version**: 3.10
 
-## Error Handling
+## Important Notes
 
-The API returns appropriate error messages and confidence scores in case of:
-- Missing query
-- Model loading errors
-- Processing errors 
+- Make sure that the `faq_data.json`, `vocab.pkl`, `siamese_faq_model.pt`, and `faq_embeddings.npy` files are included in the deployment.
+- The Whisper model will be downloaded automatically during the first run, which may take some time.
+- The free tier of Render has limited resources, so the Whisper transcription might be slow.
+
+## Environment Variables
+
+- `PORT`: Set by Render automatically
+- Customize other environment variables through the Render dashboard if needed
+
+## Troubleshooting
+
+If you encounter issues with the deployment:
+
+1. Check the Render logs for error messages
+2. Ensure FFmpeg is installed correctly (build script should handle this)
+3. Verify that the NLTK data is downloaded properly
+4. If memory issues occur, consider upgrading from the free tier 

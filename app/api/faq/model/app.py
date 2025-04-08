@@ -14,18 +14,11 @@ from faq_model_utils import (
 )
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-# Configure CORS to allow requests from any origin
-CORS(app, resources={
-    r"/*": {
-        "origins": ["*"],
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization", "Accept"]
-    }
-})
+CORS(app)
 
 # Initialize the FAQ model
 model = None
@@ -36,7 +29,7 @@ max_len = None
 device = None
 whisper_model = None
 
-def load_models():
+def load_model():
     global model, vocab, embeddings, faq_data, max_len, device, whisper_model
     
     try:
@@ -68,14 +61,20 @@ def load_models():
         model = SiameseNetwork(len(vocab), 50, 64).to(device)
         model.load_state_dict(torch.load(model_path, map_location=device))
         model.eval()
-
+        
+        # Load embeddings
+        embeddings_path = os.path.join(os.path.dirname(__file__), 'faq_embeddings.npy')
+        logger.debug(f"Loading embeddings from {embeddings_path}")
+        embeddings = np.load(embeddings_path)
+        
         # Load Whisper model
         logger.info("Loading Whisper model...")
         whisper_model = whisper.load_model("base")
         logger.info("Whisper model loaded successfully")
         
+        logger.info("Model loading completed successfully")
     except Exception as e:
-        logger.error(f"Error loading models: {str(e)}")
+        logger.error(f"Error loading model: {str(e)}")
         raise
 
 def get_faq_response(query):
@@ -117,76 +116,92 @@ def get_faq_response(query):
         logger.error(f"Error processing query: {str(e)}")
         raise
 
-@app.route('/query', methods=['POST', 'OPTIONS'])
-def query():
-    if request.method == 'OPTIONS':
-        return '', 200
-        
+@app.route('/api/faq', methods=['POST'])
+def handle_faq_request():
     try:
-        logger.info("Received query request")
+        logger.info("Received FAQ request")
         data = request.get_json()
-        if not data or 'message' not in data:
-            logger.error("No message provided in request")
-            return jsonify({'error': 'No message provided'}), 400
-
-        query_text = data['message']
-        logger.info(f"Processing query: {query_text}")
+        logger.debug(f"Request data: {data}")
         
-        answer, confidence_score = get_faq_response(query_text)
-        logger.info(f"Query processed successfully. Confidence score: {confidence_score}")
-
+        query = data.get('message', '')
+        logger.debug(f"Query: {query}")
+        
+        if not query:
+            logger.warning("Empty query received")
+            return jsonify({
+                'error': 'No query provided',
+                'answer': 'Please provide a question to get an answer.',
+                'confidence_score': 0.0
+            })
+        
+        answer, confidence_score = get_faq_response(query)
+        logger.debug(f"Response: {answer}, Confidence: {confidence_score}")
+        
         return jsonify({
             'answer': answer,
-            'confidence_score': float(confidence_score)  # Convert numpy float32 to Python float
+            'confidence_score': confidence_score
+        })
+        
+    except Exception as e:
+        logger.error(f"Error handling request: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'answer': 'Sorry, I encountered an error while processing your question.',
+            'confidence_score': 0.0
         })
 
-    except Exception as e:
-        logger.error(f"Error processing query: {str(e)}")
-        return jsonify({'error': 'Failed to process query'}), 500
-
-@app.route('/transcribe', methods=['POST'])
+@app.route('/api/transcribe', methods=['POST'])
 def transcribe():
     try:
+        logger.info("Received transcription request")
+        
         if 'audio' not in request.files:
+            logger.warning("No audio file provided")
             return jsonify({'error': 'No audio file provided'}), 400
 
         audio_file = request.files['audio']
         if not audio_file.filename.endswith('.wav'):
+            logger.warning("File format not supported")
             return jsonify({'error': 'Only WAV files are supported'}), 400
 
         # Save the audio file temporarily
         temp_path = "temp_audio.wav"
         audio_file.save(temp_path)
+        logger.debug(f"Saved temporary audio file to {temp_path}")
 
         try:
-            # Transcribe the audio
+            # Transcribe the audio using Whisper
+            logger.info("Transcribing audio...")
             result = whisper_model.transcribe(temp_path)
             transcription = result["text"]
+            logger.info(f"Transcription complete: {transcription}")
 
             # Clean up the temporary file
             os.remove(temp_path)
+            logger.debug("Removed temporary audio file")
 
             return jsonify({
-                'transcription': transcription
+                'text': transcription
             })
 
         except Exception as e:
             # Clean up the temporary file in case of error
             if os.path.exists(temp_path):
                 os.remove(temp_path)
+            logger.error(f"Error during transcription: {str(e)}")
             raise e
 
     except Exception as e:
-        logger.error(f"Error transcribing audio: {str(e)}")
+        logger.error(f"Error handling transcription request: {str(e)}")
         return jsonify({'error': 'Failed to transcribe audio'}), 500
-    
+
 @app.route('/', methods=['GET'])
 def home():
-    return jsonify({'message': 'FAQ backend is up and running! ✅'}), 200   
+    return jsonify({'message': 'FAQ backend is up and running! ✅'}), 200
 
 if __name__ == '__main__':
-    # Load all models when the application starts
-    load_models()
+    # Load the model when the application starts
+    load_model()
     logger.info("Starting Flask server...")
-    port = int(os.environ.get('PORT', 10000))
+    port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port) 
