@@ -164,10 +164,14 @@ def transcribe():
     except Exception as e:
         logger.error(f"Error transcribing audio: {str(e)}")
         return jsonify({'error': 'Failed to transcribe audio'}), 500
+    
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({'message': 'FAQ backend is up and running! ✅'}), 200   
 
 if __name__ == '__main__':
     # Load all models when the application starts
     load_models()
     logger.info("Starting Flask server...")
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port) 
