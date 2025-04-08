@@ -18,7 +18,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)
+# Configure CORS to allow requests from any origin
+CORS(app, resources={
+    r"/*": {
+        "origins": ["*"],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "Accept"]
+    }
+})
 
 # Initialize the FAQ model
 model = None
@@ -110,15 +117,23 @@ def get_faq_response(query):
         logger.error(f"Error processing query: {str(e)}")
         raise
 
-@app.route('/query', methods=['POST'])
+@app.route('/query', methods=['POST', 'OPTIONS'])
 def query():
+    if request.method == 'OPTIONS':
+        return '', 200
+        
     try:
+        logger.info("Received query request")
         data = request.get_json()
         if not data or 'message' not in data:
+            logger.error("No message provided in request")
             return jsonify({'error': 'No message provided'}), 400
 
         query_text = data['message']
+        logger.info(f"Processing query: {query_text}")
+        
         answer, confidence_score = get_faq_response(query_text)
+        logger.info(f"Query processed successfully. Confidence score: {confidence_score}")
 
         return jsonify({
             'answer': answer,
