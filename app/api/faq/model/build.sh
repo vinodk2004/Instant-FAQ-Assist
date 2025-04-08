@@ -1,15 +1,20 @@
-#!/usr/bin/env bash
-# Exit on error
-set -o errexit
 
-# Install dependencies
+#!/bin/bash
+
+# Exit immediately if a command exits with a non-zero status
+set -e
+
+echo "🚀 Starting build process..."
+
+
+echo "📦 Installing dependencies..."
+pip install --upgrade pip
+
+# Install Python dependencies from requirements.txt
 pip install -r requirements.txt
 
-# Install FFmpeg using apt-get
-apt-get update -y
-apt-get install -y ffmpeg
 
-# Download NLTK data
-python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords')"
+echo "📁 Downloading NLTK resources..."
+python3 -m nltk.downloader punkt
 
-echo "Build script completed successfully!" 
+echo "✅ Build completed successfully!"
