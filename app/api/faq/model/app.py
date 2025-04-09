@@ -78,6 +78,8 @@ def load_model():
         raise
 
 def get_faq_response(query):
+    global model, vocab, embeddings, faq_data, max_len, device
+    
     try:
         logger.debug(f"Processing query: {query}")
         
@@ -87,9 +89,21 @@ def get_faq_response(query):
             logger.debug("Small talk detected")
             return small_talk_response, 1.0
         
+        # Verify that vocab and other required objects are loaded
+        if vocab is None:
+            logger.error("Vocabulary not loaded. Attempting to reload models...")
+            load_model()
+            if vocab is None:
+                raise ValueError("Failed to load vocabulary")
+        
         # Process the query using the FAQ model
         cleaned = clean_text(query)
         logger.debug(f"Cleaned query: {cleaned}")
+        
+        # Additional safety check for empty cleaned text
+        if not cleaned:
+            logger.warning("Cleaned query is empty, using fallback response")
+            return "I'm not sure I understand your question. Could you please rephrase it?", 0.0
         
         # Ensure the encoded sequence is on the correct device
         encoded = pad_sequence(vocab.encode(cleaned), max_len)
@@ -114,7 +128,7 @@ def get_faq_response(query):
             return faq_data[best_idx]['answer'], best_score
     except Exception as e:
         logger.error(f"Error processing query: {str(e)}")
-        raise
+        return "I apologize, but I encountered an error while processing your question. Please try again with a different question.", 0.0
 
 @app.route('/api/faq', methods=['POST'])
 def handle_faq_request():
@@ -152,6 +166,8 @@ def handle_faq_request():
 
 @app.route('/api/transcribe', methods=['POST'])
 def transcribe():
+    global whisper_model
+    
     try:
         logger.info("Received transcription request")
         
@@ -170,6 +186,13 @@ def transcribe():
         logger.debug(f"Saved temporary audio file to {temp_path}")
 
         try:
+            # Verify that whisper model is loaded
+            if whisper_model is None:
+                logger.warning("Whisper model not loaded. Attempting to reload...")
+                load_model()
+                if whisper_model is None:
+                    raise ValueError("Failed to load Whisper model")
+            
             # Transcribe the audio using Whisper
             logger.info("Transcribing audio...")
             result = whisper_model.transcribe(temp_path)
