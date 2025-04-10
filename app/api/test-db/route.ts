@@ -4,14 +4,14 @@ import { connectToDatabase } from '@/lib/mongodb';
 export async function GET() {
   try {
     // Test the database connection
-    const { db, client } = await connectToDatabase();
+    const { db } = await connectToDatabase();
     
     // Try to ping the database
     await db.command({ ping: 1 });
     
     // Create the users collection if it doesn't exist
     const collections = await db.listCollections().toArray();
-    const collectionNames = collections.map(col => col.name);
+    const collectionNames = collections.map((col: { name: string }) => col.name);
     
     if (!collectionNames.includes('users')) {
       await db.createCollection('users');
