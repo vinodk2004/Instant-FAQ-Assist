@@ -12,10 +12,26 @@ from faq_model_utils import (
     clean_text, encode_text, cosine_sim, pad_sequence,
     SiameseNetwork, Vocab, check_small_talk
 )
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+import re
+import tempfile
+import ffmpeg
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+# Download required NLTK data
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords')
 
 app = Flask(__name__)
 CORS(app)
