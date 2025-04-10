@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
-// Create a SignupForm component that uses useSearchParams
+// Component that handles search params
 function SignupForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -63,121 +63,111 @@ function SignupForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black p-4">
-      <div className="max-w-md w-full space-y-8 bg-gray-800/50 p-8 rounded-2xl backdrop-blur-xl border border-gray-700/50">
+    <div className="max-w-md w-full space-y-8 bg-gray-800/50 p-8 rounded-2xl backdrop-blur-xl border border-gray-700/50">
+      <div>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8"
+        >
+          <ArrowLeftIcon className="w-5 h-5" />
+          <span>Back to Home</span>
+        </Link>
+        <h2 className="text-3xl font-bold text-white text-center">Create an account</h2>
+        <p className="mt-2 text-center text-gray-400">
+          Join us and start exploring
+        </p>
+      </div>
+      <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-300">
+              Full Name
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              autoComplete="name"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-1 block w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8a2be2] focus:border-transparent transition-all"
+              placeholder="Enter your full name"
+            />
+          </div>
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-300">
+              Email address
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 block w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8a2be2] focus:border-transparent transition-all"
+              placeholder="Enter your email"
+            />
+          </div>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-300">
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 block w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8a2be2] focus:border-transparent transition-all"
+              placeholder="Create a password"
+            />
+          </div>
+        </div>
+
         <div>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8"
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#8a2be2] hover:bg-[#9370db] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#8a2be2] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <ArrowLeftIcon className="w-5 h-5" />
-            <span>Back to Home</span>
-          </Link>
-          <h2 className="text-3xl font-bold text-white text-center">Create an account</h2>
-          <p className="mt-2 text-center text-gray-400">
-            Join us and start exploring
+            {loading ? 'Creating account...' : 'Create account'}
+          </button>
+        </div>
+
+        <div className="text-center">
+          <p className="text-sm text-gray-400">
+            Already have an account?{' '}
+            <Link href="/auth/login" className="text-[#9370db] hover:text-[#8a2be2] font-medium">
+              Sign in
+            </Link>
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-300">
-                Full Name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                autoComplete="name"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="mt-1 block w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8a2be2] focus:border-transparent transition-all"
-                placeholder="Enter your full name"
-              />
-            </div>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8a2be2] focus:border-transparent transition-all"
-                placeholder="Enter your email"
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8a2be2] focus:border-transparent transition-all"
-                placeholder="Create a password"
-              />
-            </div>
-          </div>
-
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#8a2be2] hover:bg-[#9370db] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#8a2be2] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Creating account...' : 'Create account'}
-            </button>
-          </div>
-
-          <div className="text-center">
-            <p className="text-sm text-gray-400">
-              Already have an account?{' '}
-              <Link href="/auth/login" className="text-[#9370db] hover:text-[#8a2be2] font-medium">
-                Sign in
-              </Link>
-            </p>
-          </div>
-        </form>
-      </div>
+      </form>
     </div>
   );
 }
 
-// Loading component for Suspense
-function SignupLoading() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black p-4">
-      <div className="max-w-md w-full space-y-8 bg-gray-800/50 p-8 rounded-2xl backdrop-blur-xl border border-gray-700/50">
-        <div className="flex flex-col items-center justify-center h-64">
-          <div className="w-12 h-12 border-4 border-t-purple-500 border-gray-600/30 rounded-full animate-spin mb-4"></div>
-          <p className="text-white">Loading...</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Main page component with Suspense boundary
+// Main component with Suspense boundary
 export default function SignupPage() {
   return (
-    <Suspense fallback={<SignupLoading />}>
-      <SignupForm />
-    </Suspense>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black p-4">
+      <Suspense fallback={
+        <div className="flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-t-purple-500 border-gray-600/30 rounded-full animate-spin"></div>
+        </div>
+      }>
+        <SignupForm />
+      </Suspense>
+    </div>
   );
 } 

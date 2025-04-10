@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
-// Create a LoginForm component that uses useSearchParams
+// Component to handle search params
 function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,8 +40,8 @@ function LoginForm() {
       if (isHelpdeskLogout || isLoggedOut) {
         await clearAllCookies();
         setIsLoggedOut(false);
-          return;
-        }
+        return;
+      }
 
       try {
         // Check for regular user auth only
@@ -107,7 +107,6 @@ function LoginForm() {
       setIsRedirecting(true);
       
       // Use window.location.replace to avoid adding the landing page to browser history
-      // This will make the app replace the current page in history
       window.location.replace('/');
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An error occurred');
@@ -118,7 +117,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black p-4">
+    <>
       {isRedirecting && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/80 z-50">
           <div className="flex flex-col items-center">
@@ -149,38 +148,38 @@ function LoginForm() {
             </div>
           )}
           
-            <div>
+          <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-2">
               Email Address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="appearance-none relative block w-full px-4 py-3 border border-gray-700 placeholder-gray-500 text-white bg-gray-900/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               placeholder="Email address"
-              />
-            </div>
+            />
+          </div>
           
-            <div>
+          <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-400 mb-2">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="appearance-none relative block w-full px-4 py-3 border border-gray-700 placeholder-gray-500 text-white bg-gray-900/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               placeholder="Password"
-              />
+            />
           </div>
 
           <div>
@@ -205,29 +204,21 @@ function LoginForm() {
           </div>
         </form>
       </div>
-    </div>
+    </>
   );
 }
 
-// Loading component for Suspense
-function LoginLoading() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black p-4">
-      <div className="max-w-md w-full space-y-8 bg-gray-800/50 p-8 rounded-2xl backdrop-blur-xl border border-gray-700/50">
-        <div className="flex flex-col items-center justify-center h-64">
-          <div className="w-12 h-12 border-4 border-t-purple-500 border-gray-600/30 rounded-full animate-spin mb-4"></div>
-          <p className="text-white">Loading...</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Main page component with Suspense boundary
+// Main component with Suspense boundary
 export default function LoginPage() {
   return (
-    <Suspense fallback={<LoginLoading />}>
-      <LoginForm />
-    </Suspense>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black p-4">
+      <Suspense fallback={
+        <div className="flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-t-purple-500 border-gray-600/30 rounded-full animate-spin"></div>
+        </div>
+      }>
+        <LoginForm />
+      </Suspense>
+    </div>
   );
 } 

@@ -3,9 +3,6 @@ import { connectToDatabase } from '@/lib/mongodb';
 import jwt from 'jsonwebtoken';
 import { ObjectId } from 'mongodb';
 
-// Force dynamic rendering to avoid static generation errors
-export const dynamic = 'force-dynamic';
-
 export async function GET(request: Request) {
   try {
     // Improved cookie parsing to handle more formats and cookie headers properly
