@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import { connectToDatabase } from '@/lib/mongodb';
 
 export async function GET() {
   try {
     // Test the database connection
-    const client = await clientPromise;
-    const db = client.db('faq-assistant');
+    const { db, client } = await connectToDatabase();
     
     // Try to ping the database
     await db.command({ ping: 1 });
