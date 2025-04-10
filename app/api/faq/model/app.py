@@ -135,6 +135,11 @@ def get_faq_response(query):
 @app.route('/api/faq', methods=['POST'])
 def handle_faq_request():
     try:
+        load_model()
+    except Exception as e:
+        logger.error(f"Failed to initialize the FAQ model: {e}")
+        
+    try:
         logger.info("Received FAQ request")
         data = request.get_json()
         logger.debug(f"Request data: {data}")
