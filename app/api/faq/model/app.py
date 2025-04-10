@@ -84,9 +84,7 @@ def load_model():
         embeddings = np.load(embeddings_path)
         
         # Load Whisper model
-        logger.info("Loading Whisper model...")
-        whisper_model = whisper.load_model("base")
-        logger.info("Whisper model loaded successfully")
+        whisper_model = None
         
         logger.info("Model loading completed successfully")
     except Exception as e:
@@ -138,7 +136,7 @@ def handle_faq_request():
         load_model()
     except Exception as e:
         logger.error(f"Failed to initialize the FAQ model: {e}")
-        
+
     try:
         logger.info("Received FAQ request")
         data = request.get_json()
@@ -173,6 +171,7 @@ def handle_faq_request():
 
 @app.route('/api/transcribe', methods=['POST'])
 def transcribe():
+    global whisper_model
     try:
         logger.info("Received transcription request")
         
@@ -191,6 +190,13 @@ def transcribe():
         logger.debug(f"Saved temporary audio file to {temp_path}")
 
         try:
+
+            # Lazy load Whisper model
+            if whisper_model is None:
+                logger.info("Loading Whisper model for the first time...")
+                whisper_model = whisper.load_model("base")
+                logger.info("Whisper model loaded successfully.")
+
             # Transcribe the audio using Whisper
             logger.info("Transcribing audio...")
             result = whisper_model.transcribe(temp_path)
