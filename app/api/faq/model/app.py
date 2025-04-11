@@ -120,7 +120,7 @@ def get_faq_response(query):
         
         logger.debug(f"Best match index: {best_idx}, Confidence score: {best_score}")
         
-        if best_score < 0.86:
+        if best_score < 0.87:
             logger.debug("Low confidence, forwarding to helpdesk")
             return "I'm not confident I have the right answer for this question. I've forwarded your query to our help desk team, and they'll get back to you shortly.", best_score
         else:
